@@ -1,5 +1,7 @@
 extern crate core;
 
+use image::{ImageBuffer, Rgb};
+
 const CODE: [[i8; 6]; 96] = [
     [2, 1, 2, 2, 2, 2],
     [2, 2, 2, 1, 2, 2],
@@ -105,14 +107,14 @@ const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOP
 
 fn main() {
     let q = "Hello, world!";
-    match build_table(q) {
+    let img = match build_table(q) {
         None => panic!("Receives unsupported characters."),
-        Some(res) => {
-            for r in res {
-                print!("{}", r);
-            }
-        }
-    }
+        Some(res) => build_image(&res),
+    };
+    match img.save("img.png") {
+        Ok(_) => {}
+        Err(e) => panic!("Failed to generate the image. {:?}", e),
+    };
 }
 
 fn build_table(q: &str) -> Option<Vec<i8>> {
@@ -126,4 +128,27 @@ fn build_table(q: &str) -> Option<Vec<i8>> {
     }
     arr.extend_from_slice(&STOP_CODE);
     return Some(arr);
+}
+
+fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    let len = v.iter().map(|c| *c as u32).sum();
+    let mut img = ImageBuffer::new(len, 200);
+    let mut black = true;
+    let mut x: u32 = 0;
+    for i in 0..v.len() {
+        let color = if black {
+            Rgb([0, 0, 0])
+        } else {
+            Rgb([255, 255, 255])
+        };
+        for _ in 0..v[i] {
+            for y in 0..200 {
+                let pixel = img.get_pixel_mut(x, y);
+                *pixel = color;
+            }
+            x += 1;
+        }
+        black = !black;
+    }
+    return img;
 }
