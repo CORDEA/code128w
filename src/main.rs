@@ -1,3 +1,5 @@
+extern crate core;
+
 const CODE: [[i8; 6]; 96] = [
     [2, 1, 2, 2, 2, 2],
     [2, 2, 2, 1, 2, 2],
@@ -102,5 +104,26 @@ const STOP_CODE: [i8; 7] = [2, 3, 3, 1, 1, 1, 2];
 const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f";
 
 fn main() {
-    println!("Hello, world!");
+    let q = "Hello, world!";
+    match build_table(q) {
+        None => panic!("Receives unsupported characters."),
+        Some(res) => {
+            for r in res {
+                print!("{}", r);
+            }
+        }
+    }
+}
+
+fn build_table(q: &str) -> Option<Vec<i8>> {
+    let mut arr: Vec<i8> = vec![];
+    arr.extend_from_slice(&START_CODE_B);
+    for c in q.chars() {
+        match CODE_B.find(c) {
+            None => return None,
+            Some(i) => arr.extend_from_slice(&CODE[i]),
+        };
+    }
+    arr.extend_from_slice(&STOP_CODE);
+    return Some(arr);
 }
