@@ -144,8 +144,9 @@ fn build_table(q: &str) -> Option<Vec<i8>> {
 }
 
 fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let len = v.iter().map(|c| *c as u32).sum();
-    let mut img = ImageBuffer::new(len, 200);
+    let width = v.iter().map(|c| *c as u32).sum();
+    let height = width / 2;
+    let mut img = ImageBuffer::new(width, height);
     let mut black = true;
     let mut x: u32 = 0;
     for i in 0..v.len() {
@@ -155,7 +156,7 @@ fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
             Rgb([255, 255, 255])
         };
         for _ in 0..v[i] {
-            for y in 0..200 {
+            for y in 0..height {
                 let pixel = img.get_pixel_mut(x, y);
                 *pixel = color;
             }
