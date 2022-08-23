@@ -2,7 +2,7 @@ extern crate core;
 
 use image::{ImageBuffer, Rgb};
 
-const CODE: [[i8; 6]; 96] = [
+const CODE: [[i8; 6]; 103] = [
     [2, 1, 2, 2, 2, 2],
     [2, 2, 2, 1, 2, 2],
     [2, 2, 2, 2, 2, 1],
@@ -99,6 +99,13 @@ const CODE: [[i8; 6]; 96] = [
     [1, 1, 1, 3, 4, 1],
     [1, 3, 1, 1, 4, 1],
     [1, 1, 4, 1, 1, 3],
+    [1, 1, 4, 3, 1, 1],
+    [4, 1, 1, 1, 1, 3],
+    [4, 1, 1, 3, 1, 1],
+    [1, 1, 3, 1, 4, 1],
+    [1, 1, 4, 1, 3, 1],
+    [3, 1, 1, 1, 4, 1],
+    [4, 1, 1, 1, 3, 1],
 ];
 const START_CODE_B: [i8; 6] = [2, 1, 1, 2, 1, 4];
 const STOP_CODE: [i8; 7] = [2, 3, 3, 1, 1, 1, 2];
@@ -118,16 +125,22 @@ fn main() {
 }
 
 fn build_table(q: &str) -> Option<Vec<i8>> {
-    let mut arr: Vec<i8> = vec![];
-    arr.extend_from_slice(&START_CODE_B);
-    for c in q.chars() {
+    let mut data: Vec<i8> = vec![];
+    let mut cd = 104;
+    data.extend_from_slice(&START_CODE_B);
+    for (i, c) in q.chars().enumerate() {
         match CODE_B.find(c) {
             None => return None,
-            Some(i) => arr.extend_from_slice(&CODE[i]),
+            Some(j) => {
+                data.extend_from_slice(&CODE[j]);
+                cd += j * (i + 1);
+            }
         };
     }
-    arr.extend_from_slice(&STOP_CODE);
-    return Some(arr);
+    cd %= 103;
+    data.extend_from_slice(&CODE[cd]);
+    data.extend_from_slice(&STOP_CODE);
+    return Some(data);
 }
 
 fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
