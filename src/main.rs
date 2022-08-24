@@ -1,5 +1,6 @@
 extern crate core;
 
+use clap::{Parser, ValueEnum};
 use image::{ImageBuffer, Rgb};
 
 const CODE: [[i8; 6]; 103] = [
@@ -112,16 +113,45 @@ const STOP_CODE: [i8; 7] = [2, 3, 3, 1, 1, 1, 2];
 
 const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f";
 
+#[derive(Parser)]
+#[clap(version)]
+struct Cli {
+    #[clap(value_parser)]
+    query: String,
+    #[clap(short, long, arg_enum, value_parser)]
+    format: Format,
+    #[clap(short, long, value_parser)]
+    out: Option<String>,
+}
+
+#[derive(Clone, Eq, PartialEq, ValueEnum)]
+enum Format {
+    Text,
+    Image,
+}
+
 fn main() {
-    let q = "Hello, world!";
-    let img = match build_table(q) {
+    let cli = Cli::parse();
+    if cli.format == Format::Image && cli.out.is_none() {
+        panic!("Requires --out argument when format is image.");
+    }
+    let res = match build_table(&cli.query) {
         None => panic!("Receives unsupported characters."),
-        Some(res) => build_image(&res),
+        Some(r) => r,
     };
-    match img.save("img.png") {
-        Ok(_) => {}
-        Err(e) => panic!("Failed to generate the image. {:?}", e),
-    };
+    match cli.format {
+        Format::Text => println!(
+            "{}",
+            res.iter()
+                .fold(String::new(), |r, c| format!("{0}{1}", r, c))
+        ),
+        Format::Image => {
+            match build_image(&res).save(cli.out.unwrap()) {
+                Ok(_) => {}
+                Err(e) => panic!("Failed to generate the image. {:?}", e),
+            };
+        }
+    }
 }
 
 fn build_table(q: &str) -> Option<Vec<i8>> {
