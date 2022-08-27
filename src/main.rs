@@ -108,10 +108,15 @@ const CODE: [[i8; 6]; 103] = [
     [3, 1, 1, 1, 4, 1],
     [4, 1, 1, 1, 3, 1],
 ];
+const START_CODE_A: [i8; 6] = [2, 1, 1, 4, 1, 2];
 const START_CODE_B: [i8; 6] = [2, 1, 1, 2, 1, 4];
 const STOP_CODE: [i8; 7] = [2, 3, 3, 1, 1, 1, 2];
 
-const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f";
+const CODE_A: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]\
+^_\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\
+\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f";
+const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]\
+^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f";
 
 #[derive(Parser)]
 #[clap(version)]
@@ -120,6 +125,8 @@ struct Cli {
     query: String,
     #[clap(short, long, arg_enum, value_parser)]
     format: Format,
+    #[clap(short, long, arg_enum, value_parser)]
+    code: Code,
     #[clap(short, long, value_parser)]
     out: Option<String>,
 }
@@ -130,12 +137,19 @@ enum Format {
     Image,
 }
 
+#[derive(Clone, Eq, PartialEq, ValueEnum)]
+enum Code {
+    A,
+    B,
+    C,
+}
+
 fn main() {
     let cli = Cli::parse();
     if cli.format == Format::Image && cli.out.is_none() {
         panic!("Requires --out argument when format is image.");
     }
-    let res = match build_table(&cli.query) {
+    let res = match build_table(&cli.query, &cli.code) {
         None => panic!("Receives unsupported characters."),
         Some(r) => r,
     };
@@ -154,12 +168,23 @@ fn main() {
     }
 }
 
-fn build_table(q: &str) -> Option<Vec<i8>> {
+fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
+    let set = match code {
+        Code::A => CODE_A,
+        Code::B => CODE_B,
+        // TODO
+        Code::C => CODE_B,
+    };
     let mut data: Vec<i8> = vec![];
     let mut cd = 104;
-    data.extend_from_slice(&START_CODE_B);
+    data.extend_from_slice(match code {
+        Code::A => &START_CODE_A,
+        Code::B => &START_CODE_B,
+        // TODO
+        Code::C => &START_CODE_B,
+    });
     for (i, c) in q.chars().enumerate() {
-        match CODE_B.find(c) {
+        match set.find(c) {
             None => return None,
             Some(j) => {
                 data.extend_from_slice(&CODE[j]);
