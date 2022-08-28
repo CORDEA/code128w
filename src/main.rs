@@ -176,7 +176,11 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
         Code::C => CODE_B,
     };
     let mut data: Vec<i8> = vec![];
-    let mut cd = 104;
+    let mut cd = match code {
+        Code::A => 103,
+        Code::B => 104,
+        Code::C => 105,
+    };
     data.extend_from_slice(match code {
         Code::A => &START_CODE_A,
         Code::B => &START_CODE_B,
