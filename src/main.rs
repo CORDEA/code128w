@@ -110,6 +110,7 @@ const CODE: [[i8; 6]; 103] = [
 ];
 const START_CODE_A: [i8; 6] = [2, 1, 1, 4, 1, 2];
 const START_CODE_B: [i8; 6] = [2, 1, 1, 2, 1, 4];
+const START_CODE_C: [i8; 6] = [2, 1, 1, 2, 3, 2];
 const STOP_CODE: [i8; 7] = [2, 3, 3, 1, 1, 1, 2];
 
 const CODE_A: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]\
@@ -172,8 +173,7 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
     let set = match code {
         Code::A => CODE_A,
         Code::B => CODE_B,
-        // TODO
-        Code::C => CODE_B,
+        Code::C => "",
     };
     let mut data: Vec<i8> = vec![];
     let mut cd = match code {
@@ -184,17 +184,36 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
     data.extend_from_slice(match code {
         Code::A => &START_CODE_A,
         Code::B => &START_CODE_B,
-        // TODO
-        Code::C => &START_CODE_B,
+        Code::C => &START_CODE_C,
     });
-    for (i, c) in q.chars().enumerate() {
-        match set.find(c) {
-            None => return None,
-            Some(j) => {
-                data.extend_from_slice(&CODE[j]);
-                cd += j * (i + 1);
+    if *code == Code::C {
+        let pairs = q
+            .chars()
+            .collect::<Vec<char>>()
+            // TODO
+            .chunks(2)
+            .map(|c| format!("{0}{1}", c[0], c[1]))
+            .map(|c| usize::from_str_radix(&c, 10))
+            .collect::<Vec<Result<usize, _>>>();
+        for (i, p) in pairs.iter().enumerate() {
+            match p {
+                Err(_) => return None,
+                Ok(j) => {
+                    data.extend_from_slice(&CODE[*j]);
+                    cd += j * (i + 1);
+                }
             }
-        };
+        }
+    } else {
+        for (i, c) in q.chars().enumerate() {
+            match set.find(c) {
+                None => return None,
+                Some(j) => {
+                    data.extend_from_slice(&CODE[j]);
+                    cd += j * (i + 1);
+                }
+            };
+        }
     }
     cd %= 103;
     data.extend_from_slice(&CODE[cd]);
