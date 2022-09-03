@@ -170,6 +170,17 @@ fn main() {
 }
 
 fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
+    let code = match code {
+        Code::A => Code::A,
+        Code::B => Code::B,
+        Code::C => {
+            if q.len() < 2 {
+                Code::B
+            } else {
+                Code::C
+            }
+        }
+    };
     let set = match code {
         Code::A => CODE_A,
         Code::B => CODE_B,
@@ -186,22 +197,29 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
         Code::B => &START_CODE_B,
         Code::C => &START_CODE_C,
     });
-    if *code == Code::C {
-        let pairs = q
-            .chars()
-            .collect::<Vec<char>>()
-            // TODO
-            .chunks(2)
-            .map(|c| format!("{0}{1}", c[0], c[1]))
-            .map(|c| usize::from_str_radix(&c, 10))
-            .collect::<Vec<Result<usize, _>>>();
-        for (i, p) in pairs.iter().enumerate() {
-            match p {
-                Err(_) => return None,
+    if code == Code::C {
+        let chars = q.chars().collect::<Vec<char>>();
+        for (i, c) in chars.chunks(2).enumerate() {
+            if c.len() < 2 {
+                // Switch to the Code B.
+                data.extend_from_slice(&CODE[100]);
+                cd += 100 * (i + 1);
+                match CODE_B.find(c[0]) {
+                    Some(j) => {
+                        data.extend_from_slice(&CODE[j]);
+                        cd += j * (i + 2);
+                    }
+                    None => return None,
+                }
+                continue;
+            }
+            let s = format!("{0}{1}", c[0], c[1]);
+            match usize::from_str_radix(&s, 10) {
                 Ok(j) => {
-                    data.extend_from_slice(&CODE[*j]);
+                    data.extend_from_slice(&CODE[j]);
                     cd += j * (i + 1);
                 }
+                Err(_) => return None,
             }
         }
     } else {
