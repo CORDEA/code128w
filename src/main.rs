@@ -205,9 +205,9 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
                 data.extend_from_slice(&CODE[100]);
                 cd += 100 * (i + 1);
                 match CODE_B.find(c[0]) {
-                    Some(j) => {
-                        data.extend_from_slice(&CODE[j]);
-                        cd += j * (i + 2);
+                    Some(n) => {
+                        data.extend_from_slice(&CODE[n]);
+                        cd += n * (i + 2);
                     }
                     None => return None,
                 }
@@ -215,9 +215,9 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
             }
             let s = format!("{0}{1}", c[0], c[1]);
             match usize::from_str_radix(&s, 10) {
-                Ok(j) => {
-                    data.extend_from_slice(&CODE[j]);
-                    cd += j * (i + 1);
+                Ok(n) => {
+                    data.extend_from_slice(&CODE[n]);
+                    cd += n * (i + 1);
                 }
                 Err(_) => return None,
             }
@@ -226,9 +226,9 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
         for (i, c) in q.chars().enumerate() {
             match set.find(c) {
                 None => return None,
-                Some(j) => {
-                    data.extend_from_slice(&CODE[j]);
-                    cd += j * (i + 1);
+                Some(n) => {
+                    data.extend_from_slice(&CODE[n]);
+                    cd += n * (i + 1);
                 }
             };
         }
