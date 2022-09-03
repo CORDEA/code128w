@@ -119,6 +119,8 @@ const CODE_A: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOP
 const CODE_B: &'static str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]\
 ^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f";
 
+const PADDING: u32 = 10;
+
 #[derive(Parser)]
 #[clap(version)]
 struct Cli {
@@ -240,11 +242,11 @@ fn build_table(q: &str, code: &Code) -> Option<Vec<i8>> {
 }
 
 fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let width = v.iter().map(|c| *c as u32).sum();
-    let height = width / 2;
-    let mut img = ImageBuffer::new(width, height);
+    let width = v.iter().map(|c| *c as u32).sum::<u32>() + PADDING * 2;
+    let height = width / 2 + PADDING * 2;
+    let mut img = ImageBuffer::from_pixel(width, height, Rgb([255, 255, 255]));
     let mut black = true;
-    let mut x: u32 = 0;
+    let mut x: u32 = PADDING;
     for i in 0..v.len() {
         let color = if black {
             Rgb([0, 0, 0])
@@ -252,7 +254,7 @@ fn build_image(v: &Vec<i8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
             Rgb([255, 255, 255])
         };
         for _ in 0..v[i] {
-            for y in 0..height {
+            for y in PADDING..height - PADDING {
                 let pixel = img.get_pixel_mut(x, y);
                 *pixel = color;
             }
